@@ -1,0 +1,16 @@
+{
+	"log": {
+		"path" : "",
+		"level": "info"
+	},
+"NovelInfo": [
+	{
+		"Filename": "王牌",
+		"LastNum": 0,
+		"LastName": "新书已发！",
+		"End": true,
+		"listReg": "div.listmain",
+		"contentReg": "#nr"
+	}
+]
+}
