@@ -20,9 +20,9 @@ type (
 )
 
 func FindAllChaptersFromUrl(url, listReg string) (chapters []Chapter) {
-	bytes, err := fetcher.Fetch(url)
+	bytes, err := fetcher.FetchMethodGet(url)
 	if err != nil {
-		log.Println("Fatal error: ", err.Error())
+		log.Error("Fatal error: ", err.Error())
 	}
 
 	html := string(bytes)
@@ -53,6 +53,7 @@ func DownloadAllValidChapters(name string, chapters []Chapter) (lastDownload, la
 		fmt.Printf("下载：%s ......", chap.Name)
 		content := downloadChapterContent(chap.Url)
 		if content == "" {
+			fmt.Println("完成。")
 			return
 		}
 		saveToFile(chap.Name, content, name+".txt")
@@ -64,7 +65,7 @@ func DownloadAllValidChapters(name string, chapters []Chapter) (lastDownload, la
 }
 
 func downloadChapterContent(chapterUrl string) (content string) {
-	bytes, err := fetcher.Fetch(chapterUrl)
+	bytes, err := fetcher.FetchMethodGet(chapterUrl)
 	if err != nil {
 		log.Println("Fatal error: ", err.Error())
 	}

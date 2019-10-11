@@ -1,16 +1,18 @@
 {
-	"log": {
-		"path" : "",
-		"level": "info"
+	"log":{
+		"path":"",
+		"level":"info"
 	},
-"NovelInfo": [
-	{
-		"Filename": "王牌",
-		"LastNum": 0,
-		"LastName": "新书已发！",
-		"End": true,
-		"listReg": "div.listmain",
-		"contentReg": "#nr"
-	}
-]
+	"novelWebInfo":[
+		{
+			"webName":"书屋小说网",
+			"homepage":"http://www.shu05.com",
+			"searchApi": "http://www.shu05.com/modules/article/search.php?searchkey=",
+			"method": "post",
+			"searchReg":"p>a",
+			"searchPageReg":"li>a",
+			"listReg":"div>ul.list-charts",
+			"contentReg":"#nr"
+		}
+	]
 }

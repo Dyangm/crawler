@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-func Fetch(url string) ([]byte, error) {
+func FetchMethodGet(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -28,6 +28,25 @@ func Fetch(url string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
+func FetchMethodPost(url string) ([]byte, error) {
+	req, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded") //这个一定要加，不加form的值post不过去，被坑了两小时
+	req.Header.Add("Charset", "UTF-8")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	return ioutil.ReadAll(resp.Body)
+}
+
 func determineEncoding(r io.Reader) encoding.Encoding {
 	bytes, err := bufio.NewReader(r).Peek(1024)
 	if err != nil {
@@ -38,5 +57,3 @@ func determineEncoding(r io.Reader) encoding.Encoding {
 
 	return e
 }
-
-

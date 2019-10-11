@@ -2,13 +2,13 @@ package search
 
 import (
 	"bytes"
+	"github.com/Dyangm/crawler/config"
 	"github.com/Dyangm/crawler/fetch"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/axgle/mahonia"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"io/ioutil"
-	"net/http"
 	"strings"
 )
 
@@ -19,32 +19,18 @@ type Request struct {
 
 type SearchHandler struct {
 	SearchMap map[string]string
+	ListMap map[string]string
 }
 
-func (hand *SearchHandler) Search(name string) error {
+func (hand *SearchHandler) Search(name string, webInfo config.WebInfo) error {
 	val, _ := Utf8ToGbk([]byte(name))
 	curl := "http://www.shu05.com/modules/article/search.php?searchkey=" + string(val)
-	req, err := http.NewRequest("POST", curl, nil)
+	bytes, err := fetcher.FetchMethodPost(curl)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded") //这个一定要加，不加form的值post不过去，被坑了两小时
-	req.Header.Add("Charset", "UTF-8")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	defer resp.Body.Close()
-
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	str := string(data)
-	hand.SearchMap, err = hand.parser(str, "p>a")
+	str := string(bytes)
+	hand.SearchMap, err = hand.parser(str, webInfo.SearchReg)
 	if err != nil {
 		return err
 	}
@@ -52,15 +38,19 @@ func (hand *SearchHandler) Search(name string) error {
 	if len(hand.SearchMap) == 0 {
 		return nil
 	}
-	searchPage, err := hand.parser(str, "li>a")
+	searchPage, err := hand.parser(str, webInfo.SearchPageReg)
 	if err != nil {
 		return err
 	}
 
 	for _, v := range searchPage {
-		fetch, err := fetcher.Fetch("http://www.shu05.com" + v)
+		url := v
+		if !strings.Contains(v, webInfo.Homepage) {
+			url = webInfo.Homepage + v
+		}
+		fetch, err := fetcher.FetchMethodGet(url)
 		str := string(fetch)
-		searchMap, err := hand.parser(str, "p>a")
+		searchMap, err := hand.parser(str, webInfo.SearchReg)
 		if err != nil {
 			return err
 		}

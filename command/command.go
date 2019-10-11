@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"github.com/Dyangm/crawler/config"
 	"github.com/Dyangm/crawler/downloader"
 	"github.com/Dyangm/crawler/fetch"
 	"github.com/Dyangm/crawler/search"
@@ -14,6 +15,7 @@ import (
 type Handler struct {
 	urlArr     []*Request
 	kCountHttp int
+
 	command    string
 }
 
@@ -24,14 +26,19 @@ func NewHandler() *Handler {
 
 func (h *Handler) CommandHandler() {
 	for {
-		var cmd string
-		fmt.Println("1:搜索;2:搜索信息;否则退出")
-		fmt.Scan(&cmd)
+		var cmd string = "0"
+		if len(h.urlArr) > 0 {
+			fmt.Println("0:搜索;1:搜索信息;2:选择下载;否则退出")
+			fmt.Scan(&cmd)
+		}
+
 		switch cmd {
-		case "1":
+		case "0":
 			h.searchCommand()
-		case "2":
+		case "1":
 			h.printAllData()
+		case "2":
+			h.downloaderCommand(0)
 		default:
 			os.Exit(0)
 		}
@@ -48,7 +55,11 @@ func (h *Handler) searchCommand() {
 	var name string
 	fmt.Scan(&name)
 	searchHandler := &search.SearchHandler{}
-	searchHandler.Search(name)
+	config, _ := config.GetConfig()
+	for _, v := range config.NovelWebInfo {
+		searchHandler.Search(name, v)
+	}
+
 	h.urlArr = make([]*Request, 0)
 	for k, v := range searchHandler.SearchMap {
 		request := &Request{}
@@ -67,6 +78,10 @@ const kPrintNumber = 10
 
 func (h *Handler) printAllData() {
 	var command int
+	if len(h.urlArr) == 0 {
+		fmt.Println("查询数据不存在，请从新输入查询！")
+		return
+	}
 	fmt.Println("查询全部数据;")
 	num := kPrintNumber
 	for {
@@ -79,7 +94,7 @@ func (h *Handler) printAllData() {
 			h.kCountHttp = 0
 		}
 		for i := h.kCountHttp; i < count; i++ {
-			fmt.Printf("%d %s\n", i, h.urlArr[i].City)
+			fmt.Printf("%d： %s\n", i, h.urlArr[i].City)
 		}
 		fmt.Printf("1:下载; 2: 选择查看第N条数据;")
 		if len(h.urlArr) > count {
@@ -94,7 +109,7 @@ func (h *Handler) printAllData() {
 
 		switch command {
 		case 1:
-			go h.downloaderCommand(command)
+			h.downloaderCommand(command)
 		case 2:
 			h.printData(command)
 		case 0:
@@ -108,10 +123,10 @@ func (h *Handler) printAllData() {
 }
 
 func (h *Handler) printData(command int) {
-	log.Println("查询第N条数据详情: ")
+	fmt.Println("查询第N条数据详情: ")
 	fmt.Scan(&command)
-	log.Println(h.urlArr[command].City, h.urlArr[command].Url)
-	fetch, e := fetcher.Fetch(h.urlArr[command].Url)
+	fmt.Println(h.urlArr[command].City)
+	fetch, e := fetcher.FetchMethodGet(h.urlArr[command].Url)
 	if e != nil {
 		log.Error(e)
 	}
@@ -122,8 +137,25 @@ func (h *Handler) printData(command int) {
 		log.Error(err)
 	}
 
-	content := strings.Replace(document.Find("").Text(), "", "", -1)
-	fmt.Println(content)
+	msgs :=document.Find("div>h3").Text()
+	fmt.Println(msgs)
+	dataArr := downloader.FindAllChaptersFromUrl(h.urlArr[command].Url, "div>ul.list-charts")
+	fmt.Println("章节总数: ", len(dataArr))
+	fmt.Print("作品简介:	")
+	aNode :=document.Find("div>p>br")
+	for _, v := range aNode.Nodes {
+		if strings.Count(v.PrevSibling.Data, "&") > 0 {
+			fmt.Println(v.PrevSibling.Data)
+			continue
+		}
+		fmt.Println(v.PrevSibling.Data)
+	}
+	msg := aNode.Nodes[len(aNode.Nodes)-1].NextSibling.Data
+	if msg != "" {
+		index := strings.Index(msg, "(")
+		fmt.Println(msg[:index])
+	}
+	fmt.Println()
 }
 
 func (h *Handler) downloaderCommand(command int) {

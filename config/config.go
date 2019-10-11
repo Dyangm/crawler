@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	kConfigFileName  = "./crawler/config.json"
+	kConfigFileName = "./config.json"
 )
 
 type LogInfo struct {
@@ -16,22 +16,24 @@ type LogInfo struct {
 }
 
 type (
-	Info struct {
-		Filename string
-		LastNum int
-		LastName string
-		End bool
-		ListReg string
-		ContentReg string
+	WebInfo struct {
+		WebName       string
+		Homepage      string
+		SearchApi     string
+		Method        string
+		ContentReg    string
+		ListReg       string
+		SearchReg     string
+		SearchPageReg string
 	}
 )
 
 type Config struct {
-	Log            LogInfo      `json:"log"`
-	Listen         string       `json:"listen"`
-	NovelInfo  []Info `json:"NovelInfo"`
-	closeChan      chan struct{}
-	doneChan       chan struct{}
+	Log          LogInfo   `json:"log"`
+	Listen       string    `json:"listen"`
+	NovelWebInfo []WebInfo `json:"novelWebInfo"`
+	closeChan    chan struct{}
+	doneChan     chan struct{}
 }
 
 var config *Config
